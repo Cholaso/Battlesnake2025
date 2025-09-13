@@ -1,0 +1,107 @@
+modules = ["bash", "python-3.12", "nix"]
+
+[nix]
+channel = "stable-25_05"
+
+[packager]
+# This makes Replit automatically install requirements.txt
+manager = "pip"
+requirementsPath = "requirements.txt"
+
+# Main Snake
+[[ports]]
+localPort = 8000
+externalPort = 80
+
+# Test Snake #1
+[[ports]]
+localPort = 5001
+externalPort = 3001
+
+# Test Snake #2
+[[ports]]
+localPort = 5002
+externalPort = 3002
+
+# Test Snake #3
+[[ports]]
+localPort = 5003
+externalPort = 3003
+
+# Board Visualizer
+[[ports]]
+localPort = 3010
+externalPort = 3000
+
+# Rules Server
+[[ports]]
+localPort = 9999
+externalPort = 9000
+exposeLocalhost = true
+
+[workflows]
+runButton = "Run Your Snake"
+
+[[workflows.workflow]]
+name = "Run Your Snake Webserver"
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pip install -r requirements.txt"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python main.py"
+
+[[workflows.workflow]]
+name = "Test Your Snake (Run Snake Webserver first)"
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bash scripts/run_board_rules.sh"
+waitForPort = 9999
+
+[[workflows.workflow]]
+name = "Run Environment Setup"
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pip install -r requirements.txt"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bash scripts/setup_submodules.sh"
+
+[[workflows.workflow]]
+name = "Run Environment Health Check"
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bash scripts/env_doctor.sh"
+
+
+[[workflows.workflow]]
+name = "Run 3 Test Snake Webservers"
+mode = "parallel"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PORT=5001 SNAKE_ID=A python -m examples.circle"
+waitForPort = 5001
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PORT=5002 SNAKE_ID=B python -m examples.hungry"
+waitForPort = 5002
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PORT=5003 SNAKE_ID=C python -m examples.dodge"
+waitForPort = 5003
+
+[deployment]
+run = ["sh", "-c", "python main.py"]
